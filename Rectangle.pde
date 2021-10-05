@@ -9,12 +9,15 @@ public class Rectangle extends MapObject {
 	}
 
 	public float distanceTo(PVector p) {
-		float dx = max(mins.x - p.x, 0, p.x - maxs.x);
-		float dy = max(mins.y - p.y, 0, p.y - maxs.y);
-		return sqrt(dx*dx + dy*dy);
+		PVector d = Utils.max(Utils.subtract(mins, p), Utils.subtract(p, maxs));
+		return Utils.length(Utils.max(new PVector(0.0, 0.0), d)) + Utils.min(0.0, Utils.max(d.x, d.y));
 	}
 
-	public void draw() {
-		rect(mins.x * 10, mins.y * 10, (maxs.x-mins.x) * 10, (maxs.y-mins.y) * 10);
+	public void draw(float scalingFactor) {
+		rect(mins.x * scalingFactor, mins.y * scalingFactor, (maxs.x-mins.x) * scalingFactor, (maxs.y-mins.y) * scalingFactor);
+	}
+
+	public PVector normalAt(PVector p) throws IllegalArgumentException{
+		throw new IllegalArgumentException();
 	}
 }

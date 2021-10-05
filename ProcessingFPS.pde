@@ -18,51 +18,29 @@ void createMap() {
 	scene.add(cam);
 }
 
-private boolean isTurningLeft = false;
-private boolean isTurningRight = false;
-private boolean isMovingForward = false;
-private boolean isMovingBack = false;
-private boolean isMovingLeft = false;
-private boolean isMovingRight = false;
-
-
-void keyPressed()	{ keyEvent(true); }
-
-void keyReleased()	{ keyEvent(false); }
-
-void keyEvent(boolean isPressed) {
-	if (key == CODED && keyCode == LEFT)	isTurningLeft = isPressed;
-	if (key == CODED && keyCode == RIGHT)	isTurningRight = isPressed;
-	if (key == 'w' || key == 'W')			isMovingForward = isPressed;
-	if (key == 's' || key == 'S')			isMovingBack = isPressed;
-	if (key == 'a' || key == 'A')			isMovingLeft = isPressed;
-	if (key == 'd' || key == 'D')			isMovingRight = isPressed;
-}
-
 private int lastMillis;
 
 void draw() {
 	float deltaTime = (((float)millis()-lastMillis) / 1000);
 	lastMillis = millis();
 	println(1/deltaTime);
-	if (isTurningLeft)   cam.turnLeft(deltaTime);
-	if (isTurningRight)  cam.turnRight(deltaTime);
-	if (isMovingForward) cam.moveForward(deltaTime, scene);
-	if (isMovingBack)    cam.moveBack(deltaTime, scene);
-	if (isMovingLeft)    cam.moveLeft(deltaTime, scene);
-	if (isMovingRight)   cam.moveRight(deltaTime, scene);
-
+	cam.doMovement(scene, deltaTime);
 	cam.render(scene);
 	// drawDistanceMap();
 	// drawMap();
 }
 
 void drawMap() {
+	float scalingFactor = 10;
 	background(0);
 	for (MapObject o : scene) {
-		o.draw();
+		o.draw(scalingFactor);
 	}
 }
+
+void keyPressed() { cam.keyEvent(true); }
+
+void keyReleased() { cam.keyEvent(false); }
 
 void drawDistanceMap() {
 	loadPixels();

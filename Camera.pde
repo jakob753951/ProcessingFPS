@@ -8,6 +8,22 @@ public class Camera extends MapObject {
 	public float MAX_DIST = 9999f;
 	public float MAX_STEPS = 3000;
 
+	private boolean isTurningLeft = false;
+	private boolean isTurningRight = false;
+	private boolean isMovingForward = false;
+	private boolean isMovingBack = false;
+	private boolean isMovingLeft = false;
+	private boolean isMovingRight = false;
+
+	public void keyEvent(boolean isPressed) {
+		if (key == CODED && keyCode == LEFT)	isTurningLeft = isPressed;
+		if (key == CODED && keyCode == RIGHT)	isTurningRight = isPressed;
+		if (key == 'w' || key == 'W')			isMovingForward = isPressed;
+		if (key == 's' || key == 'S')			isMovingBack = isPressed;
+		if (key == 'a' || key == 'A')			isMovingLeft = isPressed;
+		if (key == 'd' || key == 'D')			isMovingRight = isPressed;
+	}
+
 	public Camera(PVector pos, float rotation) {
 		this.pos = pos;
 		this.rotation = rotation;
@@ -20,44 +36,65 @@ public class Camera extends MapObject {
 		return Utils.distance(p, this.pos);
 	}
 
-	public void turnLeft(float deltaTime) {
-		this.rotation -= turnSpeed * deltaTime;
-	}
-
-	public void turnRight(float deltaTime) {
-		this.rotation += turnSpeed * deltaTime;
-	}
-
-	public void moveForward(float deltaTime, ArrayList<MapObject> scene) {
+	public void doMovement(ArrayList<MapObject> scene, float deltaTime) {
 		PVector lastPos = this.pos;
-		this.pos = new PVector(pos.x + (cos(rotation) * moveSpeed * deltaTime), pos.y+(sin(rotation)*moveSpeed * deltaTime));
+		PVector deltaPos = new PVector(0, 0);
+		float deltaRotation = 0;
+		if (isTurningLeft)   deltaRotation += cam.turnLeft();
+		if (isTurningRight)  deltaRotation += cam.turnRight();
+		if (isMovingForward) deltaPos = Utils.add(deltaPos, cam.moveForward());
+		if (isMovingBack)    deltaPos = Utils.add(deltaPos, cam.moveBack());
+		if (isMovingLeft)    deltaPos = Utils.add(deltaPos, cam.moveLeft());
+		if (isMovingRight)   deltaPos = Utils.add(deltaPos, cam.moveRight());
+		deltaPos = Utils.multiply(deltaPos,  moveSpeed * deltaTime);
+		
+		this.rotation += deltaRotation * deltaTime;
+		this.pos = Utils.add(this.pos, deltaPos);
+		collisionCheck(scene, deltaTime, lastPos);
+	}
+
+	public float turnLeft() {
+		return -turnSpeed;
+	}
+
+	public float turnRight() {
+		return turnSpeed;
+	}
+
+	public PVector moveForward() {
+		return new PVector(cos(rotation), sin(rotation));
+	}
+
+	public PVector moveBack() {
+		return new PVector(-(cos(rotation)), -(sin(rotation)));
+	}
+
+	public PVector moveLeft() {
+		return new PVector(sin(rotation), -(cos(rotation)));
+	}
+
+	public PVector moveRight() {
+		return new PVector(-(sin(rotation)), cos(rotation));
+	}
+
+	public void collisionCheck(ArrayList<MapObject> scene, float deltaTime, PVector lastPos) {
 		if (Utils.distanceToScene(this.pos, scene) < 0) {
-			this.pos = lastPos;
+			MapObject colliding = getCollidingObject(scene);
+			try {
+				PVector deltaPos = Utils.multiply(colliding.normalAt(this.pos), deltaTime * moveSpeed);
+				this.pos = Utils.add(this.pos, deltaPos);
+			} catch (IllegalArgumentException e) {
+				this.pos = lastPos;
+			}
 		}
 	}
 
-	public void moveBack(float deltaTime, ArrayList<MapObject> scene) {
-		PVector lastPos = this.pos;
-		this.pos = new PVector(pos.x-(cos(rotation)*moveSpeed * deltaTime), pos.y-(sin(rotation)*moveSpeed * deltaTime));
-		if (Utils.distanceToScene(this.pos, scene) < 0) {
-			this.pos = lastPos;
+	private MapObject getCollidingObject(ArrayList<MapObject> scene) {
+		for (MapObject o : scene) {
+			if (o.distanceTo(this.pos) < 0)
+				return o;
 		}
-	}
-
-	public void moveLeft(float deltaTime, ArrayList<MapObject> scene) {
-		PVector lastPos = this.pos;
-		this.pos = new PVector(pos.x+(sin(rotation)*moveSpeed * deltaTime), pos.y-(cos(rotation)*moveSpeed * deltaTime));
-		if (Utils.distanceToScene(this.pos, scene) < 0) {
-			this.pos = lastPos;
-		}
-	}
-
-	public void moveRight(float deltaTime, ArrayList<MapObject> scene) {
-		PVector lastPos = this.pos;
-		this.pos = new PVector(pos.x-(sin(rotation)*moveSpeed * deltaTime), pos.y+(cos(rotation)*moveSpeed * deltaTime));
-		if (Utils.distanceToScene(this.pos, scene) < 0) {
-			this.pos = lastPos;
-		}
+		return null;
 	}
 
 	float distanceToObjectHit(PVector p, float angle, ArrayList<MapObject> scene, int stepsTaken) {
@@ -96,13 +133,17 @@ public class Camera extends MapObject {
 		updatePixels();
 	}
 
-	public void draw() {
+	public void draw(float scalingFactor) {
 		stroke(255);
-		float lineLength = 10;
+		float lineLength = scalingFactor;
 		float leftLineAngle = this.rotation - Utils.degToRad(this.fov/2);
 		float rightLineAngle = this.rotation + Utils.degToRad(this.fov/2);
-		circle(this.pos.x * 10, this.pos.y * 10, 5);
-		line(this.pos.x * 10, this.pos.y * 10, 10 * this.pos.x + (cos(leftLineAngle) * lineLength), 10 * this.pos.y + (sin(leftLineAngle) * lineLength));
-		line(this.pos.x * 10, this.pos.y * 10, 10 * this.pos.x + (cos(rightLineAngle) * lineLength), 10 * this.pos.y + (sin(rightLineAngle) * lineLength));
+		circle(this.pos.x * scalingFactor, this.pos.y * scalingFactor, scalingFactor/2);
+		line(this.pos.x * scalingFactor, this.pos.y * scalingFactor, scalingFactor * this.pos.x + (cos(leftLineAngle) * lineLength), scalingFactor * this.pos.y + (sin(leftLineAngle) * lineLength));
+		line(this.pos.x * scalingFactor, this.pos.y * scalingFactor, scalingFactor * this.pos.x + (cos(rightLineAngle) * lineLength), scalingFactor * this.pos.y + (sin(rightLineAngle) * lineLength));
+	}
+
+	public PVector normalAt(PVector p) throws IllegalArgumentException {
+		throw new IllegalArgumentException();
 	}
 }

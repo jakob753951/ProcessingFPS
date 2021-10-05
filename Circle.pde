@@ -10,7 +10,11 @@ public class Circle extends MapObject {
 		return Utils.distance(p, this.pos) - this.radius;
 	}
 
-	public void draw() {
-		circle(pos.x * 10, pos.y * 10, radius * 10);
+	public void draw(float scalingFactor) {
+		circle(pos.x * scalingFactor, pos.y * scalingFactor, radius * scalingFactor);
+	}
+
+	public PVector normalAt(PVector p) {
+		return Utils.multiply(Utils.subtract(p, this.pos), 2/this.radius);
 	}
 }

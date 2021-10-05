@@ -23,6 +23,26 @@ public static class Utils {
 		return sqrt(a.x * a.x + a.y * a.y);
 	}
 
+	public static PVector multiply(PVector vec, float scalar) {
+		return new PVector(vec.x * scalar, vec.y * scalar);
+	}
+
+	public static float min(float a, float b) {
+		return a < b ? a : b;
+	}
+
+	public static PVector min(PVector a, PVector b) {
+		return new PVector(min(a.x, b.x), min(a.y, b.y));
+	}
+
+	public static float max(float a, float b) {
+		return a > b ? a : b;
+	}
+
+	public static PVector max(PVector a, PVector b) {
+		return new PVector(max(a.x, b.x), max(a.y, b.y));
+	}
+
 	public static float distanceToScene(PVector p, ArrayList<MapObject> scene) {
 		float minDist = Float.MAX_VALUE;
 		for (MapObject o : scene) {
