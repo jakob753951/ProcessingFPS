@@ -25,6 +25,7 @@ void draw() {
 	lastMillis = millis();
 	println(1/deltaTime);
 	cam.doMovement(scene, deltaTime);
+	background(0);
 	cam.render(scene);
 	// drawDistanceMap();
 	// drawMap();
@@ -32,7 +33,6 @@ void draw() {
 
 void drawMap() {
 	float scalingFactor = 10;
-	background(0);
 	for (MapObject o : scene) {
 		o.draw(scalingFactor);
 	}
